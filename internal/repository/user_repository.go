@@ -10,39 +10,39 @@ import (
 func HashPassword(password string) (string, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		log.Printf("Ошибка при хешировании пароля: %v", err)
+		log.Printf("Error hashing password: %v", err)
 		return "", err
 	}
 	return string(hashedPassword), nil
 }
 
-func CreateUser(email, password string) error {
-	query := `INSERT INTO users (email, password_hash) VALUES ($1, $2)`
+func CreateUser(email, password, role string) error {
+	query := `INSERT INTO users (email, password_hash, role) VALUES ($1, $2, $3)`
 
 	passwordHash, err := HashPassword(password)
 	if err != nil {
 		return err
 	}
 
-	res, err := database.DB.Exec(query, email, passwordHash)
+	res, err := database.DB.Exec(query, email, passwordHash, role)
 	if err != nil {
-		log.Printf("Ошибка при создании пользователя: %v", err)
+		log.Printf("Error creating user: %v", err)
 		return err
 	}
 
 	rowsAffected, err := res.RowsAffected()
 	if err != nil {
-		log.Printf("Ошибка при получении количества затронутых строк: %v", err)
+		log.Printf("Error getting rows affected: %v", err)
 		return err
 	}
 
-	log.Printf("Пользователь создан. Затронуто строк: %d", rowsAffected)
+	log.Printf("User created. Rows affected: %d", rowsAffected)
 
 	return nil
 }
 
 func GetUserByMail(email string) (*models.User, error) {
-	query := `SELECT id, email, password_hash FROM users WHERE email=$1`
+	query := `SELECT id, email, password_hash, role FROM users WHERE email=$1`
 	var user models.User
 	err := database.DB.Get(&user, query, email)
 	if err != nil {
@@ -52,7 +52,7 @@ func GetUserByMail(email string) (*models.User, error) {
 }
 
 func GetUserByID(userID int) (*models.User, error) {
-	query := `SELECT id, email, password_hash FROM users WHERE id=$1`
+	query := `SELECT id, email, password_hash, role FROM users WHERE id=$1`
 	var user models.User
 	err := database.DB.Get(&user, query, userID)
 	if err != nil {

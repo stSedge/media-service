@@ -2,28 +2,31 @@ package handler
 
 import (
 	"github.com/gin-gonic/gin"
-	"media-service/internal/models"
 	"media-service/internal/services"
 	"net/http"
 )
 
 func CreateUser(c *gin.Context) {
-	var user models.User
-	if err := c.ShouldBindJSON(&user); err != nil {
+	var jsonBody map[string]string
+
+	if err := c.ShouldBindJSON(&jsonBody); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
 
-	if user.Email == "" || user.Password == "" {
+	email := jsonBody["email"]
+	password := jsonBody["password"]
+	role := jsonBody["role"]
+
+	if email == "" || password == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Email and password are required"})
 		return
 	}
 
-	err := services.CreateUser(user.Email, user.Password)
+	err := services.CreateUser(email, password, role)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	c.JSON(http.StatusOK, gin.H{"description": "Успешный ответ."})
+	// ...
 }
