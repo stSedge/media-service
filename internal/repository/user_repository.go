@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"media-service/internal/database"
@@ -16,15 +17,15 @@ func HashPassword(password string) (string, error) {
 	return string(hashedPassword), nil
 }
 
-func CreateUser(email, password, role string) error {
-	query := `INSERT INTO users (email, password_hash, role) VALUES ($1, $2, $3)`
+func CreateUser(email string, password string, roles []string) error {
+	query := `INSERT INTO users (email, password_hash, roles) VALUES ($1, $2, $3::user_role[])`
 
 	passwordHash, err := HashPassword(password)
 	if err != nil {
 		return err
 	}
 
-	res, err := database.DB.Exec(query, email, passwordHash, role)
+	res, err := database.DB.Exec(query, email, passwordHash, pq.Array(roles))
 	if err != nil {
 		log.Printf("Error creating user: %v", err)
 		return err
@@ -42,7 +43,7 @@ func CreateUser(email, password, role string) error {
 }
 
 func GetUserByMail(email string) (*models.User, error) {
-	query := `SELECT id, email, password_hash, role FROM users WHERE email=$1`
+	query := `SELECT id, email, password_hash, roles FROM users WHERE email=$1`
 	var user models.User
 	err := database.DB.Get(&user, query, email)
 	if err != nil {
@@ -52,7 +53,7 @@ func GetUserByMail(email string) (*models.User, error) {
 }
 
 func GetUserByID(userID int) (*models.User, error) {
-	query := `SELECT id, email, password_hash, role FROM users WHERE id=$1`
+	query := `SELECT id, email, password_hash, roles FROM users WHERE id=$1`
 	var user models.User
 	err := database.DB.Get(&user, query, userID)
 	if err != nil {
