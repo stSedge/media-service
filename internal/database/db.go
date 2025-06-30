@@ -6,7 +6,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"
-	"media-service/internal/models"
+	"media-service/internal/model"
 	"media-service/pkg/config"
 )
 
@@ -35,7 +35,7 @@ func InitDB() error {
 
 	log.Println("Successfully connected to the database using gorm.")
 
-	err = GormDB.AutoMigrate(&models.User{})
+	err = GormDB.AutoMigrate(&model.User{})
 	if err != nil {
 		log.Fatalf("AutoMigrate failed: %v", err)
 	}

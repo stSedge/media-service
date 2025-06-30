@@ -4,7 +4,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"media-service/internal/database"
-	"media-service/internal/models"
+	"media-service/internal/model"
 )
 
 func HashPassword(password string) (string, error) {
