@@ -4,7 +4,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"media-service/internal/database"
-	model "media-service/internal/models"
+	"media-service/internal/models"
 )
 
 func HashPassword(password string) (string, error) {
@@ -16,35 +16,32 @@ func HashPassword(password string) (string, error) {
 	return string(hashedPassword), nil
 }
 
-func CreateUser(email, password, role string) error {
-	query := `INSERT INTO users (email, password_hash, role) VALUES ($1, $2, $3)`
-
+func CreateUser(email string, password string, roles []string) error {
 	passwordHash, err := HashPassword(password)
 	if err != nil {
 		return err
 	}
 
-	res, err := database.DB.Exec(query, email, passwordHash, role)
-	if err != nil {
+	user := &model.User{
+		Email:        email,
+		PasswordHash: passwordHash,
+		Roles:        roles,
+	}
+	res := database.GormDB.Create(&user)
+
+	if res.Error != nil {
 		log.Printf("Error creating user: %v", err)
 		return err
 	}
 
-	rowsAffected, err := res.RowsAffected()
-	if err != nil {
-		log.Printf("Error getting rows affected: %v", err)
-		return err
-	}
-
-	log.Printf("User created. Rows affected: %d", rowsAffected)
+	log.Printf("User created")
 
 	return nil
 }
 
 func GetUserByMail(email string) (*model.User, error) {
-	query := `SELECT id, email, password_hash, role FROM users WHERE email=$1`
 	var user model.User
-	err := database.DB.Get(&user, query, email)
+	err := database.GormDB.Where("email = ?", email).First(&user).Error
 	if err != nil {
 		return nil, err
 	}
@@ -52,9 +49,8 @@ func GetUserByMail(email string) (*model.User, error) {
 }
 
 func GetUserByID(userID int) (*model.User, error) {
-	query := `SELECT id, email, password_hash, role FROM users WHERE id=$1`
 	var user model.User
-	err := database.DB.Get(&user, query, userID)
+	err := database.GormDB.Where("id = ?", userID).First(&user).Error
 	if err != nil {
 		return nil, err
 	}

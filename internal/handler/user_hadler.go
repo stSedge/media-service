@@ -7,6 +7,12 @@ import (
 	"net/http"
 )
 
+type UserInput struct {
+	Email    string   `json:"email"`
+	Password string   `json:"password"`
+	Roles    []string `json:"roles"`
+}
+
 func LoginHandler(c *gin.Context) {
 	var AuthRequest struct {
 		Password string `json:"password" binding:"required"`
@@ -42,23 +48,23 @@ func LoginHandler(c *gin.Context) {
 }
 
 func CreateUser(c *gin.Context) {
-	var jsonBody map[string]string
+	var jsonBody UserInput
 
 	if err := c.ShouldBindJSON(&jsonBody); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
 
-	email := jsonBody["email"]
-	password := jsonBody["password"]
-	role := jsonBody["role"]
+	email := jsonBody.Email
+	password := jsonBody.Password
+	roles := jsonBody.Roles
 
 	if email == "" || password == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Email and password are required"})
 		return
 	}
 
-	err := services.CreateUser(email, password, role)
+	err := services.CreateUser(email, password, roles)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
