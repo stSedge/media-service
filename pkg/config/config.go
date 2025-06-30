@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -36,5 +37,8 @@ func GetDBConnString() {
 		sslmode = "disable"
 	}
 
-	Cnfg.DBurl = "postgres://" + user + ":" + password + "@" + host + ":" + port + "/" + dbname + "?sslmode=" + sslmode
+	Cnfg.DBurl = fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
+		host, user, password, dbname, port, sslmode,
+	)
 }

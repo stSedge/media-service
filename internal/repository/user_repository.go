@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"media-service/internal/database"
@@ -18,34 +17,31 @@ func HashPassword(password string) (string, error) {
 }
 
 func CreateUser(email string, password string, roles []string) error {
-	query := `INSERT INTO users (email, password_hash, roles) VALUES ($1, $2, $3::user_role[])`
-
 	passwordHash, err := HashPassword(password)
 	if err != nil {
 		return err
 	}
 
-	res, err := database.DB.Exec(query, email, passwordHash, pq.Array(roles))
-	if err != nil {
+	user := &models.User{
+		Email:        email,
+		PasswordHash: passwordHash,
+		Roles:        roles,
+	}
+	res := database.GormDB.Create(&user)
+
+	if res.Error != nil {
 		log.Printf("Error creating user: %v", err)
 		return err
 	}
 
-	rowsAffected, err := res.RowsAffected()
-	if err != nil {
-		log.Printf("Error getting rows affected: %v", err)
-		return err
-	}
-
-	log.Printf("User created. Rows affected: %d", rowsAffected)
+	log.Printf("User created")
 
 	return nil
 }
 
 func GetUserByMail(email string) (*models.User, error) {
-	query := `SELECT id, email, password_hash, roles FROM users WHERE email=$1`
 	var user models.User
-	err := database.DB.Get(&user, query, email)
+	err := database.GormDB.Where("email = ?", email).First(&user).Error
 	if err != nil {
 		return nil, err
 	}
@@ -53,9 +49,8 @@ func GetUserByMail(email string) (*models.User, error) {
 }
 
 func GetUserByID(userID int) (*models.User, error) {
-	query := `SELECT id, email, password_hash, roles FROM users WHERE id=$1`
 	var user models.User
-	err := database.DB.Get(&user, query, userID)
+	err := database.GormDB.Where("id = ?", userID).First(&user).Error
 	if err != nil {
 		return nil, err
 	}
