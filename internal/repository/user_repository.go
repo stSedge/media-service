@@ -4,7 +4,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"media-service/internal/database"
-	"media-service/internal/models"
+	model "media-service/internal/models"
 )
 
 func HashPassword(password string) (string, error) {
@@ -41,9 +41,9 @@ func CreateUser(email, password, role string) error {
 	return nil
 }
 
-func GetUserByMail(email string) (*models.User, error) {
+func GetUserByMail(email string) (*model.User, error) {
 	query := `SELECT id, email, password_hash, role FROM users WHERE email=$1`
-	var user models.User
+	var user model.User
 	err := database.DB.Get(&user, query, email)
 	if err != nil {
 		return nil, err
@@ -51,9 +51,9 @@ func GetUserByMail(email string) (*models.User, error) {
 	return &user, nil
 }
 
-func GetUserByID(userID int) (*models.User, error) {
+func GetUserByID(userID int) (*model.User, error) {
 	query := `SELECT id, email, password_hash, role FROM users WHERE id=$1`
-	var user models.User
+	var user model.User
 	err := database.DB.Get(&user, query, userID)
 	if err != nil {
 		return nil, err

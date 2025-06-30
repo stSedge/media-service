@@ -5,6 +5,7 @@ import (
 	"log"
 	"media-service/internal/database"
 	"media-service/internal/handler"
+	"media-service/internal/middleware"
 )
 
 func main() {
@@ -15,7 +16,14 @@ func main() {
 
 	r := gin.Default()
 
-	r.POST("/api/users", handler.CreateUser)
+	r.POST("/api/login", handler.LoginHandler)
+
+	protect := r.Group("/api")
+
+	protect.Use(middleware.JWTMiddleware())
+	{
+		r.POST("/api/users", handler.CreateUser)
+	}
 
 	log.Println("Starting server on :8000")
 
