@@ -9,3 +9,26 @@ Content-Type: application/json
 
 ###
 
+POST http://127.0.0.1:8020/api/users
+Content-Type: application/json
+
+{
+  "email": "a@gmail.com",
+  "password": "ypaypaypa",
+  "role": "ROLE_ADMIN"
+}
+
+###
+
+POST http://127.0.0.1:8020/api/projects
+Content-Type: application/json
+
+{
+  "title": "project1",
+  "client_id": 1,
+  "pm_id": 1
+}
+
+###
+
+GET http://127.0.0.1:8020/api/projects

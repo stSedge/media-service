@@ -35,7 +35,7 @@ func InitDB() error {
 
 	log.Println("Successfully connected to the database using gorm.")
 
-	err = GormDB.AutoMigrate(&model.User{})
+	err = GormDB.AutoMigrate(&model.User{}, &model.Project{})
 	if err != nil {
 		log.Fatalf("AutoMigrate failed: %v", err)
 	}

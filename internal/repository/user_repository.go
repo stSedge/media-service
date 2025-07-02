@@ -30,8 +30,8 @@ func CreateUser(email string, password string, roles []string) error {
 	res := database.GormDB.Create(&user)
 
 	if res.Error != nil {
-		log.Printf("Error creating user: %v", err)
-		return err
+		log.Printf("Error creating user: %v", res.Error)
+		return res.Error
 	}
 
 	log.Printf("User created")

@@ -6,3 +6,8 @@ type User struct {
 	PasswordHash string   `json:"-" gorm:"not null"`
 	Roles        []string `json:"roles" gorm:"type:text[]"`
 }
+
+type UserResponse struct {
+	ID    uint   `json:"id"`
+	Email string `json:"email"`
+}
