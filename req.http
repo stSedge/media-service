@@ -13,9 +13,9 @@ POST http://127.0.0.1:8020/api/users
 Content-Type: application/json
 
 {
-  "email": "a@gmail.com",
+  "email": "aaa@gmail.com",
   "password": "ypaypaypa",
-  "role": "ROLE_ADMIN"
+  "roles": ["ROLE_ADMIN"]
 }
 
 ###
@@ -32,3 +32,7 @@ Content-Type: application/json
 ###
 
 GET http://127.0.0.1:8020/api/projects
+
+###
+
+GET http://127.0.0.1:8020/api/users

@@ -56,3 +56,16 @@ func GetUserByID(userID int) (*model.User, error) {
 	}
 	return &user, nil
 }
+
+func GetAllUsers() ([]model.User, error) {
+	var users []model.User
+
+	err := database.GormDB.Find(&users).Error
+
+	if err != nil {
+		log.Printf("Error fetching users: %v", err.Error)
+		return nil, err
+	}
+
+	return users, nil
+}

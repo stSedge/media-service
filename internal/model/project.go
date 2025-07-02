@@ -14,6 +14,7 @@ type ProjectInput struct {
 	ClientID uint   `json:"client_id"`
 	PmID     uint   `json:"pm_id"`
 }
+
 type ProjectResponse struct {
 	ID     uint         `json:"id"`
 	Title  string       `json:"title"`

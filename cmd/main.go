@@ -23,6 +23,7 @@ func main() {
 	protect.Use(middleware.JWTMiddleware())
 	{
 		r.POST("/api/users", handler.CreateUser)
+		r.GET("/api/users", handler.GetAllUsers)
 		r.POST("/api/projects", handler.CreateProject)
 		r.GET("/api/projects", handler.GetAllProjects)
 	}
