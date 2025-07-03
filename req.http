@@ -1,14 +1,4 @@
 ###
-POST http://127.0.0.1:8020/api/user
-Content-Type: application/json
-
-{
-  "email": "user",
-  "password": "user"
-  "role" : "user"
-}
-
-###
 
 POST http://127.0.0.1:8020/api/users
 Content-Type: application/json
