@@ -25,13 +25,25 @@ func JWTMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		email, err := jwt.ParseToken(parts[1])
+		claims, err := jwt.ParseToken(parts[1])
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired token"})
 			return
 		}
 
-		// Сохраняем claims в контекст
+		tokenType, ok := claims["type"].(string)
+
+		if !ok || tokenType != "access" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token type: expected access token"})
+			return
+		}
+
+		email, ok := claims["sub"].(string)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "subject not found in token"})
+			return 
+		}
+
 		c.Set("user_email", email)
 		c.Next()
 	}

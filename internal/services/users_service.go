@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"log"
+	"media-service/internal/models"
 	"media-service/internal/repository"
 	"media-service/pkg/jwt"
 )
@@ -24,18 +25,61 @@ func Authenticate(email, password string) (string, string, error) {
 	return jwt.GenerateTokens(user.Email)
 }
 
-func CreateUser(email string, password string, roles []string) error {
+func Refresh(refreshTokenString string) (string, string, error) {
+	claims, err := jwt.ParseToken(refreshTokenString)
+	if err != nil {
+		return "", "", fmt.Errorf("could not parse refresh token: %w", err)
+	}
+
+	tokenType, ok := claims["type"].(string)
+	if !ok || tokenType != "refresh" {
+		return "", "", errors.New("invalid token type: expected refresh token")
+	}
+
+	email, ok := claims["sub"].(string)
+	if !ok {
+		return "", "", errors.New("subject not found in token")
+	}
+
+	_, err = repository.GetUserByMail(email)
+	if err != nil {
+		return "", "", fmt.Errorf("user '%s' from token not found", email)
+	}
+
+	newAccessToken, newRefreshToken, err := jwt.GenerateTokens(email)
+	if err != nil {
+		return "", "", fmt.Errorf("could not generate new tokens: %w", err)
+	}
+
+	return newAccessToken, newRefreshToken, nil
+}
+
+func HashPassword(password string) (string, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		log.Printf("Error hashing password: %v", err)
+		return "", err
+	}
+	return string(hashedPassword), nil
+}
+
+func CreateUser(email string, password string, roles []string) (*models.User, error) {
 
 	_, err := repository.GetUserByMail(email)
 
 	if err == nil {
-		return errors.New("user with this email already exists")
+		return nil, errors.New("user with this email already exists")
 	}
 
-	err = repository.CreateUser(email, password, roles)
+	passwordHash, err := HashPassword(password)
 	if err != nil {
-		return errors.New("could not create user in repository")
+		return nil, err
 	}
 
-	return nil
+	user, err := repository.CreateUser(email, passwordHash, roles)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }

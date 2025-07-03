@@ -22,7 +22,8 @@ func main() {
 
 	protect.Use(middleware.JWTMiddleware())
 	{
-		r.POST("/api/users", handler.CreateUser)
+		r.POST("/users", handler.CreateUser)
+		r.POST("/refresh", handler.RefreshTokenHandler)
 	}
 
 	log.Println("Starting server on :8000")

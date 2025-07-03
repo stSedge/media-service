@@ -5,6 +5,7 @@ import (
 	"log"
 	"media-service/internal/services"
 	"net/http"
+	"strings"
 )
 
 type UserInput struct {
@@ -47,6 +48,38 @@ func LoginHandler(c *gin.Context) {
 	*/
 }
 
+func RefreshTokenHandler(c *gin.Context) {
+	refreshToken := c.GetHeader("X-Refresh-Token")
+	if refreshToken == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "X-Refresh-Token header is required"})
+		return
+	}
+
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "authorization header is missing"})
+		return
+	}
+
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid authorization header format"})
+		return
+	}
+
+	newAccessToken, newRefreshToken, err := services.Refresh(refreshToken)
+	if err != nil {
+		log.Printf("Failed to refresh token: %v", err)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired refresh token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"token":         newAccessToken,
+		"refresh_token": newRefreshToken,
+	})
+}
+
 func CreateUser(c *gin.Context) {
 	var jsonBody UserInput
 
@@ -64,9 +97,19 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	err := services.CreateUser(email, password, roles)
+	user, err := services.CreateUser(email, password, roles)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+
+	c.JSON(http.StatusCreated, gin.H{
+        "message": "User created successfully",
+        "user": gin.H{
+            "id":    user.ID,
+            "email": user.Email,
+            "roles": user.Roles,
+        },
+    })
 }

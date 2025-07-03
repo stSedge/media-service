@@ -16,13 +16,9 @@ func HashPassword(password string) (string, error) {
 	return string(hashedPassword), nil
 }
 
-func CreateUser(email string, password string, roles []string) error {
-	passwordHash, err := HashPassword(password)
-	if err != nil {
-		return err
-	}
+func CreateUser(email string, passwordHash string, roles []string) (*models.User, error) {
 
-	user := &model.User{
+	user := &models.User{
 		Email:        email,
 		PasswordHash: passwordHash,
 		Roles:        roles,
@@ -30,17 +26,17 @@ func CreateUser(email string, password string, roles []string) error {
 	res := database.GormDB.Create(&user)
 
 	if res.Error != nil {
-		log.Printf("Error creating user: %v", err)
-		return err
+		log.Printf("Error creating user: %v", res.Error)
+		return nil, res.Error
 	}
 
 	log.Printf("User created")
 
-	return nil
+	return user, nil
 }
 
-func GetUserByMail(email string) (*model.User, error) {
-	var user model.User
+func GetUserByMail(email string) (*models.User, error) {
+	var user models.User
 	err := database.GormDB.Where("email = ?", email).First(&user).Error
 	if err != nil {
 		return nil, err
@@ -48,8 +44,8 @@ func GetUserByMail(email string) (*model.User, error) {
 	return &user, nil
 }
 
-func GetUserByID(userID int) (*model.User, error) {
-	var user model.User
+func GetUserByID(userID int) (*models.User, error) {
+	var user models.User
 	err := database.GormDB.Where("id = ?", userID).First(&user).Error
 	if err != nil {
 		return nil, err

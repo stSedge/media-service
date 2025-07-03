@@ -12,8 +12,9 @@ const (
 
 func GenerateTokens(email string) (string, string, error) {
 	payload := jwt.MapClaims{
-		"sub": email,
-		"exp": time.Now().Add(30 * time.Minute).Unix(),
+		"sub":  email,
+		"exp":  time.Now().Add(30 * time.Minute).Unix(),
+		"type": "access",
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
@@ -25,8 +26,9 @@ func GenerateTokens(email string) (string, string, error) {
 	}
 
 	payloadRefreshToken := jwt.MapClaims{
-		"sub": email,
-		"exp": time.Now().Add(time.Hour * 72).Unix(),
+		"sub":  email,
+		"exp":  time.Now().Add(time.Hour * 72).Unix(),
+		"type": "refresh",
 	}
 
 	token = jwt.NewWithClaims(jwt.SigningMethodHS256, payloadRefreshToken)
@@ -39,7 +41,7 @@ func GenerateTokens(email string) (string, string, error) {
 	return t, tRefreshToken, nil
 }
 
-func ParseToken(tokenString string) (string, error) {
+func ParseToken(tokenString string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -48,13 +50,12 @@ func ParseToken(tokenString string) (string, error) {
 	})
 
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		mail := claims["email"].(string)
-		return mail, nil
+		return claims, nil
 	}
 
-	return "", fmt.Errorf("invalid token")
+	return nil, fmt.Errorf("invalid token")
 }
