@@ -72,3 +72,23 @@ func GetMyProjects(email string) ([]model.ProjectResponse, error) {
 
 	return response, nil
 }
+
+func GetProject(projectID uint) (model.ProjectResponseFull, error) {
+	project, err := repository.GetProject(projectID)
+	if err != nil {
+		return model.ProjectResponseFull{}, errors.New("could not get project")
+	}
+	return model.ProjectResponseFull{
+		ID:    project.ID,
+		Title: project.Title,
+		Client: model.UserResponse{
+			ID:    project.Client.ID,
+			Email: project.Client.Email,
+		},
+		Pm: model.UserResponse{
+			ID:    project.Pm.ID,
+			Email: project.Pm.Email,
+		},
+		Reports: project.Reports,
+	}, nil
+}

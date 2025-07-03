@@ -28,6 +28,7 @@ func main() {
 		r.POST("/api/projects", handler.CreateProject)
 		r.GET("/api/projects", handler.GetAllProjects)
 		r.GET("/api/projects/my", handler.GetMyProjects)
+		r.GET("/api/projects/:project_id", handler.GetProject)
 	}
 
 	log.Println("Starting server on :8000")

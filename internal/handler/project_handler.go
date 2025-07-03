@@ -5,6 +5,7 @@ import (
 	"media-service/internal/model"
 	"media-service/internal/services"
 	"net/http"
+	"strconv"
 )
 
 func CreateProject(c *gin.Context) {
@@ -61,4 +62,22 @@ func GetMyProjects(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"projects": projects})
+}
+
+func GetProject(c *gin.Context) {
+	projectIDStr := c.Param("project_id")
+	projectID64, err := strconv.ParseUint(projectIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project_id"})
+		return
+	}
+	projectID := uint(projectID64)
+
+	project, err := services.GetProject(projectID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"project": project})
 }
