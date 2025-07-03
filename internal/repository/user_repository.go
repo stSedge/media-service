@@ -4,7 +4,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"media-service/internal/database"
-	"media-service/internal/models"
+	"media-service/internal/model"
 )
 
 func HashPassword(password string) (string, error) {
@@ -16,9 +16,9 @@ func HashPassword(password string) (string, error) {
 	return string(hashedPassword), nil
 }
 
-func CreateUser(email string, passwordHash string, roles []string) (*models.User, error) {
+func CreateUser(email string, passwordHash string, roles []string) (*model.User, error) {
 
-	user := &models.User{
+	user := &model.User{
 		Email:        email,
 		PasswordHash: passwordHash,
 		Roles:        roles,
@@ -35,8 +35,8 @@ func CreateUser(email string, passwordHash string, roles []string) (*models.User
 	return user, nil
 }
 
-func GetUserByMail(email string) (*models.User, error) {
-	var user models.User
+func GetUserByMail(email string) (*model.User, error) {
+	var user model.User
 	err := database.GormDB.Where("email = ?", email).First(&user).Error
 	if err != nil {
 		return nil, err
@@ -44,11 +44,24 @@ func GetUserByMail(email string) (*models.User, error) {
 	return &user, nil
 }
 
-func GetUserByID(userID int) (*models.User, error) {
-	var user models.User
+func GetUserByID(userID int) (*model.User, error) {
+	var user model.User
 	err := database.GormDB.Where("id = ?", userID).First(&user).Error
 	if err != nil {
 		return nil, err
 	}
 	return &user, nil
+}
+
+func GetAllUsers() ([]model.User, error) {
+	var users []model.User
+
+	err := database.GormDB.Find(&users).Error
+
+	if err != nil {
+		log.Printf("Error fetching users: %v", err.Error)
+		return nil, err
+	}
+
+	return users, nil
 }

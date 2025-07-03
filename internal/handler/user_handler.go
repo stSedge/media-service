@@ -3,16 +3,11 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 	"log"
+	"media-service/internal/model"
 	"media-service/internal/services"
 	"net/http"
 	"strings"
 )
-
-type UserInput struct {
-	Email    string   `json:"email"`
-	Password string   `json:"password"`
-	Roles    []string `json:"roles"`
-}
 
 func LoginHandler(c *gin.Context) {
 	var AuthRequest struct {
@@ -81,7 +76,7 @@ func RefreshTokenHandler(c *gin.Context) {
 }
 
 func CreateUser(c *gin.Context) {
-	var jsonBody UserInput
+	var jsonBody model.UserInput
 
 	if err := c.ShouldBindJSON(&jsonBody); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
@@ -112,4 +107,15 @@ func CreateUser(c *gin.Context) {
             "roles": user.Roles,
         },
     })
+}
+
+func GetAllUsers(c *gin.Context) {
+	users, err := services.GetAllUsers()
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"users": users})
 }

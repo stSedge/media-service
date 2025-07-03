@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"log"
-	"media-service/internal/models"
+	"media-service/internal/model"
 	"media-service/internal/repository"
 	"media-service/pkg/jwt"
 )
@@ -63,7 +63,7 @@ func HashPassword(password string) (string, error) {
 	return string(hashedPassword), nil
 }
 
-func CreateUser(email string, password string, roles []string) (*models.User, error) {
+func CreateUser(email string, password string, roles []string) (*model.User, error) {
 
 	_, err := repository.GetUserByMail(email)
 
@@ -82,4 +82,30 @@ func CreateUser(email string, password string, roles []string) (*models.User, er
 	}
 
 	return user, nil
+}
+
+func GetAllUsers() ([]model.UserResponseFull, error) {
+	users, err := repository.GetAllUsers()
+
+	if err != nil {
+		return nil, errors.New("could not get all users")
+	}
+
+	var usersResponse []model.UserResponseFull
+	for _, u := range users {
+		tzName, _ := u.CreatedAt.Zone()
+
+		usersResponse = append(usersResponse, model.UserResponseFull{
+			ID:    u.ID,
+			Email: u.Email,
+			Roles: u.Roles,
+			CreatedAt: model.CreatedAtInfo{
+				Date:         u.CreatedAt,
+				TimezoneType: 3, // заглушка! в го нет аналога time_zone из РЗ
+				Timezone:     tzName,
+			},
+		})
+	}
+
+	return usersResponse, nil
 }
