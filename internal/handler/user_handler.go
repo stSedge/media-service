@@ -43,6 +43,21 @@ func LoginHandler(c *gin.Context) {
 	*/
 }
 
+func LogoutHandler(c *gin.Context) {
+	refreshToken := c.GetHeader("X-Refresh-Token")
+	if refreshToken == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "X-Refresh-Token header is required"})
+		return
+	}
+
+	if err := services.Logout(refreshToken); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "successfully logged out"})
+}
+
 func RefreshTokenHandler(c *gin.Context) {
 	refreshToken := c.GetHeader("X-Refresh-Token")
 	if refreshToken == "" {
@@ -98,15 +113,14 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-
 	c.JSON(http.StatusCreated, gin.H{
-        "message": "User created successfully",
-        "user": gin.H{
-            "id":    user.ID,
-            "email": user.Email,
-            "roles": user.Roles,
-        },
-    })
+		"message": "User created successfully",
+		"user": gin.H{
+			"id":    user.ID,
+			"email": user.Email,
+			"roles": user.Roles,
+		},
+	})
 }
 
 func GetAllUsers(c *gin.Context) {

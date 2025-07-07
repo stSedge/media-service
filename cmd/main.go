@@ -22,6 +22,7 @@ func main() {
 
 	protect.Use(middleware.JWTMiddleware())
 	{
+		protect.POST("/api/logout", handler.LogoutHandler)
 		r.POST("/api/users", handler.CreateUser)
 		r.POST("/refresh", handler.RefreshTokenHandler)
 		r.GET("/api/users", handler.GetAllUsers)

@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"media-service/internal/model"
@@ -15,14 +16,46 @@ func Authenticate(email, password string) (string, string, error) {
 
 	if err != nil {
 		log.Printf("Error finding user by email %s: %v", email, err)
-		return "", "", err // Возвращаем ошибку дальше
+		return "", "", err
 	}
 
 	if err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
 		return "", "", fmt.Errorf("invalid credentials")
 	}
 
-	return jwt.GenerateTokens(user.Email)
+	accessToken, refreshToken, jti, err := jwt.GenerateTokens(user.Email)
+	if err != nil {
+		return "", "", fmt.Errorf("could not generate tokens: %w", err)
+	}
+
+	if err = repository.CreateToken(user.ID, jti); err != nil {
+		return "", "", fmt.Errorf("could not save token: %w", err)
+	}
+
+	return accessToken, refreshToken, nil
+}
+
+func Logout(refreshTokenString string) error {
+	claims, err := jwt.ParseToken(refreshTokenString)
+	if err != nil {
+		return fmt.Errorf("could not parse token: %w", err)
+	}
+
+	jtiStr, ok := claims["jti"].(string)
+	if !ok {
+		return errors.New("jti not found in token")
+	}
+
+	jti, err := uuid.Parse(jtiStr)
+	if err != nil {
+		return fmt.Errorf("failed to parse jti: %w", err)
+	}
+
+	if err := repository.RevokeToken(jti); err != nil {
+		return fmt.Errorf("could not revoke token: %w", err)
+	}
+
+	return nil
 }
 
 func Refresh(refreshTokenString string) (string, string, error) {
@@ -36,19 +69,41 @@ func Refresh(refreshTokenString string) (string, string, error) {
 		return "", "", errors.New("invalid token type: expected refresh token")
 	}
 
+	jtiStr, ok := claims["jti"].(string)
+	if !ok {
+		return "", "", errors.New("jti not found in token")
+	}
+	jti, err := uuid.Parse(jtiStr)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to parse jti from token: %w", err)
+	}
+
+	_, err = repository.GetTokenByJTI(jti)
+	if err != nil {
+		return "", "", errors.New("refresh token is invalid or has been revoked")
+	}
+
+	if err := repository.RevokeToken(jti); err != nil {
+		log.Printf("could not revoke old refresh token: %v", err)
+	}
+
 	email, ok := claims["sub"].(string)
 	if !ok {
 		return "", "", errors.New("subject not found in token")
 	}
 
-	_, err = repository.GetUserByMail(email)
+	user, err := repository.GetUserByMail(email)
 	if err != nil {
 		return "", "", fmt.Errorf("user '%s' from token not found", email)
 	}
 
-	newAccessToken, newRefreshToken, err := jwt.GenerateTokens(email)
+	newAccessToken, newRefreshToken, newJti, err := jwt.GenerateTokens(user.Email)
 	if err != nil {
 		return "", "", fmt.Errorf("could not generate new tokens: %w", err)
+	}
+
+	if err = repository.CreateToken(user.ID, newJti); err != nil {
+		return "", "", fmt.Errorf("could not save new token: %w", err)
 	}
 
 	return newAccessToken, newRefreshToken, nil
