@@ -32,3 +32,37 @@ func GetAllProjects() ([]model.Project, error) {
 	log.Printf("Projects fetched")
 	return projects, nil
 }
+
+func GetMyProjects(pmID uint) ([]model.Project, error) {
+	var projects []model.Project
+
+	res := database.GormDB.
+		Preload("Client").
+		Preload("Pm").
+		Where("pm_id = ?", pmID).
+		Find(&projects)
+
+	if res.Error != nil {
+		log.Printf("Error fetching project: %v", res.Error)
+		return nil, res.Error
+	}
+	log.Printf("Projects fetched")
+	return projects, nil
+}
+
+func GetProject(projectID uint) (model.Project, error) {
+	var project model.Project
+
+	res := database.GormDB.
+		Preload("Client").
+		Preload("Pm").
+		Preload("Reports").
+		First(&project, "id = ?", projectID)
+
+	if res.Error != nil {
+		log.Printf("Error fetching project: %v", res.Error)
+		return model.Project{}, res.Error
+	}
+	log.Printf("Projects fetched")
+	return project, nil
+}
