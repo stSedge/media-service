@@ -15,9 +15,9 @@ POST http://127.0.0.1:8020/api/projects
 Content-Type: application/json
 
 {
-  "title": "project1",
-  "client_id": 1,
-  "pm_id": 1
+"title": "project13",
+"client_id": 1,
+"pm_id": 1
 }
 
 ###
@@ -27,3 +27,31 @@ GET http://127.0.0.1:8020/api/projects
 ###
 
 GET http://127.0.0.1:8020/api/users
+
+###
+
+GET http://127.0.0.1:8020/api/projects/my
+
+###
+
+GET http://127.0.0.1:8020/api/projects/8
+
+###
+
+POST http://127.0.0.1:8020/api/login
+Content-Type: application/json
+
+{
+  "email": "aaa@gmail.com",
+  "password": "ypaypaypa"
+}
+
+###
+
+#POST http://127.0.0.1:8020/api/projects/8/reports
+#Content-Type: multipart/form-data
+#
+#title=report1
+#content=content1
+#members=user1,user2
+#file=@C:\Users\user\GolandProjects\media-service\req.http

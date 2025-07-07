@@ -9,4 +9,5 @@ type Report struct {
 	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`
 	FilePath  string    `json:"file_path"  gorm:"not null"`
 	ProjectID uint      `json:"-"          gorm:"not null; index"`
+	Members   string    `json:"-"`
 }

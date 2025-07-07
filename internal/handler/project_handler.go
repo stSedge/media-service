@@ -27,7 +27,7 @@ func CreateProject(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": id})
+	c.JSON(http.StatusOK, gin.H{"id": id})
 }
 
 func GetAllProjects(c *gin.Context) {
@@ -66,7 +66,7 @@ func GetMyProjects(c *gin.Context) {
 
 func GetProject(c *gin.Context) {
 	projectIDStr := c.Param("project_id")
-	projectID64, err := strconv.ParseUint(projectIDStr, 10, 32)
+	projectID64, err := strconv.ParseUint(projectIDStr, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project_id"})
 		return
