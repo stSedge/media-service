@@ -58,6 +58,52 @@ func Logout(refreshTokenString string) error {
 	return nil
 }
 
+func LogoutAll(email string, refreshTokenString string) error {
+	claims, err := jwt.ParseToken(refreshTokenString)
+	if err != nil {
+		return fmt.Errorf("could not parse token: %w", err)
+	}
+
+	typetoken, ok := claims["type"].(string)
+	if typetoken != "refresh" || !ok {
+		return errors.New("invalid token type: expected refresh token")
+	}
+
+	jtiStr, ok := claims["jti"].(string)
+	if !ok {
+		return errors.New("jti not found in token")
+	}
+
+	jti, err := uuid.Parse(jtiStr)
+	if err != nil {
+		return fmt.Errorf("failed to parse jti: %w", err)
+	}
+
+	refreshToken, err := repository.GetTokenByJTI(jti)
+	if err != nil {
+		return fmt.Errorf("could not get token by jti: %w", err)
+	}
+
+	if refreshToken.IsActive {
+		return errors.New("refresh token is revoked")
+	}
+
+	user, err := repository.GetUserByMail(email)
+	if err != nil {
+		return fmt.Errorf("could not find user by email %s: %v", email, err)
+	}
+
+	if user.ID != refreshToken.UserID {
+		return errors.New("token does not belong to the user")
+	}
+
+	if err := repository.RevokeAllUserTokens(user.ID); err != nil {
+		return fmt.Errorf("could not revoke all tokens: %w", err)
+	}
+
+	return nil
+}
+
 func Refresh(refreshTokenString string) (string, string, error) {
 	claims, err := jwt.ParseToken(refreshTokenString)
 	if err != nil {
@@ -73,6 +119,7 @@ func Refresh(refreshTokenString string) (string, string, error) {
 	if !ok {
 		return "", "", errors.New("jti not found in token")
 	}
+
 	jti, err := uuid.Parse(jtiStr)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to parse jti from token: %w", err)
@@ -83,6 +130,7 @@ func Refresh(refreshTokenString string) (string, string, error) {
 		return "", "", errors.New("refresh token is invalid or has been revoked")
 	}
 
+	// TODO: нужно ли делать return в случае ошибки?
 	if err := repository.RevokeToken(jti); err != nil {
 		log.Printf("could not revoke old refresh token: %v", err)
 	}
@@ -112,8 +160,7 @@ func Refresh(refreshTokenString string) (string, string, error) {
 func HashPassword(password string) (string, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		log.Printf("Error hashing password: %v", err)
-		return "", err
+		return "", fmt.Errorf("error hashing password: %v", err)
 	}
 	return string(hashedPassword), nil
 }

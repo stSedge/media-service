@@ -19,6 +19,7 @@ func LoginHandler(c *gin.Context) {
 	if err := c.ShouldBindJSON(&AuthRequest); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		log.Printf("Error binding JSON: %v", err)
+		return
 	}
 
 	token, refresh_token, err := services.Authenticate(AuthRequest.Email, AuthRequest.Password)
@@ -56,6 +57,30 @@ func LogoutHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "successfully logged out"})
+}
+
+func LogoutAllHandler(c *gin.Context) {
+	var request struct {
+		RefreshToken string `json:"refresh_token" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body, refresh_token is required"})
+		return
+	}
+
+	email := c.GetString("user_email")
+	if email == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "user email not found in token"})
+		return
+	}
+
+	if err := services.LogoutAll(email, request.RefreshToken); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "successfully logged out from all devices"})
 }
 
 func RefreshTokenHandler(c *gin.Context) {
