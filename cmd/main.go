@@ -22,16 +22,30 @@ func main() {
 
 	protect.Use(middleware.JWTMiddleware())
 	{
-		protect.POST("/logout", handler.LogoutHandler)
-		protect.POST("/logout/all", handler.LogoutAllHandler)
-		r.POST("/api/users", handler.CreateUser)
-		r.POST("/refresh", handler.RefreshTokenHandler)
-		r.GET("/api/users", handler.GetAllUsers)
-		r.POST("/api/projects", handler.CreateProject)
-		r.GET("/api/projects", handler.GetAllProjects)
-		r.GET("/api/projects/my", handler.GetMyProjects)
-		r.GET("/api/projects/:project_id", handler.GetProject)
-		r.POST("/api/projects/:project_id/reports", handler.CreateReport)
+		userGroup := protect.Group("/")
+		userGroup.Use(middleware.CheckRole("ROLE_USER"))
+		{
+			userGroup.POST("/logout", handler.LogoutHandler)
+			userGroup.POST("/logout/all", handler.LogoutAllHandler)
+			userGroup.POST("/refresh", handler.RefreshTokenHandler)
+		}
+
+		pmGroup := protect.Group("/")
+		pmGroup.Use(middleware.CheckRole("ROLE_PM"))
+		{
+			pmGroup.GET("/projects/my", handler.GetMyProjects)
+			pmGroup.GET("/projects/:project_id", handler.GetProject)
+		}
+
+		adminGroup := protect.Group("/")
+		adminGroup.Use(middleware.CheckRole("ROLE_ADMIN"))
+		{
+			adminGroup.POST("/users", handler.CreateUser)
+			adminGroup.GET("/users", handler.GetAllUsers)
+			adminGroup.POST("/projects", handler.CreateProject)
+			adminGroup.GET("/projects", handler.GetAllProjects)
+			adminGroup.POST("/projects/:project_id/reports", handler.CreateReport)
+		}
 	}
 
 	log.Println("Starting server on :8000")

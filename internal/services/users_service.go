@@ -211,3 +211,13 @@ func GetAllUsers() ([]model.UserResponseFull, error) {
 
 	return usersResponse, nil
 }
+
+func GetUserByMail(email string) (*model.User, error) {
+	user, err := repository.GetUserByMail(email)
+
+	if err != nil {
+		return nil, errors.New("could not get the user")
+	}
+
+	return user, nil
+}
