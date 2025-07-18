@@ -24,6 +24,7 @@ func main() {
 	{
 		protect.POST("/logout", handler.LogoutHandler)
 		protect.POST("/logout/all", handler.LogoutAllHandler)
+		protect.GET("/sessions", handler.GetSessionsHandler)
 		r.POST("/api/users", handler.CreateUser)
 		r.POST("/refresh", handler.RefreshTokenHandler)
 		r.GET("/api/users", handler.GetAllUsers)

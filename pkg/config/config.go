@@ -10,15 +10,10 @@ import (
 
 type Config struct {
 	DBurl string
+	JwtSecret  string
 }
 
 var Cnfg Config
-
-func init() {
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found, using environment variables from OS")
-	}
-}
 
 func GetDBConnString() {
 
@@ -41,4 +36,10 @@ func GetDBConnString() {
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
 		host, user, password, dbname, port, sslmode,
 	)
+
+	Cnfg.JwtSecret = os.Getenv("JWT_SECRET")
+
+	if Cnfg.JwtSecret == "" {
+		log.Fatal("JWT secret keys are not set in environment variables")
+	}
 }

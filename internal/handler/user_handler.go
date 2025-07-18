@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"media-service/internal/model"
+	"media-service/internal/repository"
 	"media-service/internal/services"
 	"net/http"
 	"strings"
@@ -22,7 +23,10 @@ func LoginHandler(c *gin.Context) {
 		return
 	}
 
-	token, refresh_token, err := services.Authenticate(AuthRequest.Email, AuthRequest.Password)
+	ipAddress := c.ClientIP()
+	userAgent := c.Request.UserAgent()
+
+	token, refresh_token, err := services.Authenticate(AuthRequest.Email, AuthRequest.Password, ipAddress, userAgent)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -81,6 +85,34 @@ func LogoutAllHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "successfully logged out from all devices"})
+}
+
+func GetSessionsHandler(c *gin.Context) {
+	email, exists := c.Get("user_email")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "user email not found in token"})
+		return
+	}
+
+	user, err := repository.GetUserByMail(email.(string))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not retrieve user"})
+		return
+	}
+
+	refreshToken := c.GetHeader("X-Refresh-Token")
+	if refreshToken == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "X-Refresh-Token header is required"})
+		return
+	}
+
+	sessions, err := services.GetUserSessions(user.ID, refreshToken)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"sessions": sessions})
 }
 
 func RefreshTokenHandler(c *gin.Context) {

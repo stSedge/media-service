@@ -4,21 +4,18 @@ import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"media-service/pkg/config"
 	"time"
-)
-
-const (
-	jwtSecretKey = "your_access_secret"
 )
 
 func GenerateTokens(email string) (string, string, uuid.UUID, error) {
 	payload := jwt.MapClaims{
-		"sub":   email,
-		"exp":   time.Now().Add(15 * time.Minute).Unix(),
-		"type":  "access",
+		"sub":  email,
+		"exp":  time.Now().Add(15 * time.Minute).Unix(),
+		"type": "access",
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
-	t, err := token.SignedString([]byte(jwtSecretKey))
+	t, err := token.SignedString([]byte(config.Cnfg.JwtSecret))
 	if err != nil {
 		return "", "", uuid.Nil, err
 	}
@@ -31,7 +28,7 @@ func GenerateTokens(email string) (string, string, uuid.UUID, error) {
 		"jti":  jti.String(),
 	}
 	token = jwt.NewWithClaims(jwt.SigningMethodHS256, payloadRefreshToken)
-	tRefreshToken, err := token.SignedString([]byte(jwtSecretKey))
+	tRefreshToken, err := token.SignedString([]byte(config.Cnfg.JwtSecret))
 	if err != nil {
 		return "", "", uuid.Nil, err
 	}
@@ -44,7 +41,7 @@ func ParseToken(tokenString string) (jwt.MapClaims, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return []byte(jwtSecretKey), nil
+		return []byte(config.Cnfg.JwtSecret), nil
 	})
 
 	if err != nil {

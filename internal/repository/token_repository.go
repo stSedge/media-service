@@ -7,7 +7,7 @@ import (
 	"media-service/internal/model"
 )
 
-func CreateToken(userID uint, jti uuid.UUID) error {
+func CreateToken(userID, sessionID uint, jti uuid.UUID) error {
 	token := &model.Token{
 		UserID: userID,
 		JTI:    jti,
