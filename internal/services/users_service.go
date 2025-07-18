@@ -14,6 +14,7 @@ import (
 
 func Authenticate(email, password, ipAddress, userAgent string) (string, string, error) {
 	user, err := repository.GetUserByMail(email)
+
 	if err != nil {
 		log.Printf("Error finding user by email %s: %v", email, err)
 		return "", "", err
@@ -145,6 +146,7 @@ func Refresh(refreshTokenString string) (string, string, error) {
 		return "", "", errors.New("refresh token is invalid or has been revoked")
 	}
 
+	// TODO: нужно ли делать return в случае ошибки?
 	if err := repository.RevokeToken(jti); err != nil {
 		log.Printf("could not revoke old refresh token: %v", err)
 	}
@@ -268,9 +270,19 @@ func GetUserSessions(userID uint, RefreshToken string) ([]model.SessionResponse,
 			UserAgent: s.UserAgent,
 			IPAddress: s.IPAddress,
 			Expired:   s.Expired || time.Now().After(s.ExpiredAt),
-			IsCurrent: s.ID == currentSessionID,
+			IsCurrent: s.ID == sessionID,
 		})
 	}
 
 	return response, nil
+}
+
+func GetUserByMail(email string) (*model.User, error) {
+	user, err := repository.GetUserByMail(email)
+
+	if err != nil {
+		return nil, errors.New("could not get the user")
+	}
+
+	return user, nil
 }
