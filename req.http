@@ -1,0 +1,26 @@
+POST http://127.0.0.1:8020/api/users
+Content-Type: application/json
+
+{
+  "email": "aaa@gmail.com",
+  "password": "ypaypaypa",
+  "roles": ["ROLE_ADMIN"]
+}
+
+###
+###
+
+POST http://127.0.0.1:8020/api/login
+Content-Type: application/json
+
+{
+  "email": "aaa@gmail.com",
+  "password": "ypaypaypa"
+}
+
+#####
+POST http://127.0.0.1:8020/api/api/logout
+Content-Type: application/json
+X-Refresh-Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTI0OTMyMjAsImp0aSI6ImYwZmNiMWI2LWQ0MTktNDY3ZS04YTQ5LTczYWQ1NTk2ODI0NSIsInN1YiI6ImFhYUBnbWFpbC5jb20iLCJ0eXBlIjoicmVmcmVzaCJ9.AEMNJ_HItATSKd7IlyIXGHqHwVYplprUVb0MD-8xuQ8
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTE4ODkzMjAsInN1YiI6ImFhYUBnbWFpbC5jb20iLCJ0eXBlIjoiYWNjZXNzIn0.bbva-XuMSF-msCJMB8Bbh-uOPFARHhGQiDzNw0OyjWg
+
